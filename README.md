@@ -5,6 +5,9 @@ A modern, production-ready full-stack application for real-time phishing detecti
 ![PhishGuard](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 ![Vite](https://img.shields.io/badge/Vite-7.1-646CFF?style=for-the-badge&logo=vite)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?style=for-the-badge&logo=fastapi)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3.0-F7931E?style=for-the-badge&logo=scikit-learn)
 
 ## ✨ Features
 
@@ -18,6 +21,11 @@ A modern, production-ready full-stack application for real-time phishing detecti
 - 🧠 **Advanced Explainability**: AI-powered analysis with detailed threat intelligence
 - 📧 **Email Analysis**: Comprehensive email tone and content analysis
 - 📈 **Model Comparison**: Compare multiple detection models side-by-side
+   🧠 **AI-Powered Detection**: Machine learning models with 85%+ accuracy
+- 🔗 **Real-time Analysis**: Instant URL and email phishing detection
+- 📊 **Model Explainability**: Detailed reasoning for every detection
+- 🚀 **FastAPI Backend**: High-performance Python API with auto-docs
+- 🔍 **Advanced Feature Extraction**: URL structure and email content analysis
 
 ## 📂 Project Structure
 
@@ -32,7 +40,14 @@ PhishGuard/
 │   │   └── assets/        # Static assets
 │   ├── public/            # Public assets
 │   └── package.json       # Frontend dependencies
-└── backend/              # Backend services (coming soon)
+└── backend/               # Python FastAPI backend with AI models
+│   ├── api/
+│   │   └── main.py        # FastAPI server (port 8000)
+│   ├── models/
+│   │   ├── url_model.pkl      # URL phishing detection model
+│   │   ├── email_model.pkl    # Email phishing detection model
+│   │   └── phishing_predictor.py  # AI prediction engine
+│   └── requirements.txt   # Python dependencies
 ```
 
 ## 🚀 Quick Start
@@ -69,6 +84,34 @@ PhishGuard/
    
    Navigate to `http://localhost:3000`
 
+   ## 🐍 Backend Setup (Python)
+
+The AI-powered phishing detection backend is now available!
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
+
+### Installation & Running
+
+1. **Navigate to backend**
+   ```bash
+   cd backend
+2. **Install Python dependencies**
+    pip install -r requirements.txt
+3.**Start the FastAPI server**
+   bash
+cd api
+python main.py
+
+4.**Access the backend**
+API Server: http://localhost:8000
+
+API Documentation: http://localhost:8000/docs
+
+Health Check: http://localhost:8000/api/health
+
+
 ### Build for Production
 
 ```bash
@@ -89,11 +132,51 @@ npm run preview
 - **React Hot Toast** - Notifications
 - **Axios** - HTTP client
 
-### Backend (Coming Soon)
-- Node.js / Express
-- MongoDB / PostgreSQL
-- JWT Authentication
-- ML Model Integration
+### Backend 
+-**FastAPI 0.104.1** - Modern Python web framework
+-**Scikit-learn 1.3.0** - Machine learning models
+-**Random Forest** - AI classification algorithm
+-**Pandas & NumPy** - Data processing
+-**Uvicorn** - ASGI server
+
+## API Endpoints
+Method	Endpoint	Description
+POST	/api/analyze/url	Analyze URL for phishing
+POST	/api/analyze/email	Analyze email content
+GET	/api/health	Service health check
+GET	/docs	Interactive API documentation
+
+**Example API Usage**
+Analyze URL:
+
+bash
+curl -X POST "http://localhost:8000/api/analyze/url" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "http://paypal-security-verify.com/login"}'
+Analyze Email:
+
+bash
+curl -X POST "http://localhost:8000/api/analyze/email" \
+  -H "Content-Type: application/json" \
+  -d '{"emailText": "URGENT: Your account will be suspended!"}'
+Running Complete System
+Terminal 1 - Backend:
+
+bash
+cd backend/api
+python main.py
+Terminal 2 - Frontend:
+
+bash
+cd frontend
+npm run dev
+Access:
+
+Frontend: http://localhost:3000
+
+Backend API: http://localhost:8000
+
+API Docs: http://localhost:8000/docs
 
 ## 🗺️ Application Routes
 
@@ -144,22 +227,19 @@ colors: {
 
 ## 🌐 Backend Integration
 
-The app works in demo mode by default. To connect to a backend API:
+The app now connects to the real AI backend! Update your frontend configuration:
 
-Update `frontend/src/pages/Scanner.jsx`:
-```javascript
-const API_ENDPOINT = 'https://your-backend-api.com/analyze';
-```
+**Frontend automatically connects to:** `http://localhost:8000`
 
-Expected API response format:
+**API Response Format:**
 ```json
 {
   "classification": "safe" | "malicious",
-  "confidence": 0.87,
-  "highlighted_text": "Suspicious content...",
-  "explanation": "Detection reasoning..."
+  "confidence": 0.95,
+  "highlighted_text": "Suspicious patterns detected...",
+  "explanation": "AI-detected phishing indicators...",
+  "features": { ... }
 }
-```
 
 ## 🐛 Troubleshooting
 
