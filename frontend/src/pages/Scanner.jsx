@@ -15,6 +15,7 @@ import ModelComparison from '../components/ModelComparison';
 import PhishingTimeline from '../components/PhishingTimeline';
 import { generatePDFReport } from '../utils/reportGenerator';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../utils/api';
 
 function Scanner() {
   const { isAuthenticated, user } = useAuth();
@@ -25,7 +26,7 @@ function Scanner() {
   const [history, setHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
 
-  const API_ENDPOINT = 'http://localhost:5000/analyze';
+  const API_BASE_URL = 'http://localhost:8000';
 
   const handleScan = async () => {
     if (!inputValue.trim()) return;
@@ -34,12 +35,21 @@ function Scanner() {
     setResult(null);
 
     try {
-      const response = await axios.post(API_ENDPOINT, {
-        type: inputType,
-        content: inputValue,
-      });
+      // Use correct endpoint based on input type
+      const endpoint = inputType === 'email' 
+        ? `${API_BASE_URL}/api/analyze/email`
+        : `${API_BASE_URL}/api/analyze/url`;
+      
+      const requestBody = inputType === 'email'
+        ? { emailText: inputValue }
+        : { url: inputValue };
 
-      const scanResult = response.data;
+      const response = await axios.post(endpoint, requestBody);
+
+      const scanResult = {
+        ...response.data,
+        type: inputType
+      };
       setResult(scanResult);
       addToHistory(scanResult);
     } catch (error) {
@@ -63,7 +73,7 @@ function Scanner() {
     }
   };
 
-  const addToHistory = (scanResult) => {
+  const addToHistory = async (scanResult) => {
     const historyItem = {
       id: Date.now(),
       type: scanResult.type,
@@ -74,6 +84,24 @@ function Scanner() {
     };
 
     setHistory(prev => [historyItem, ...prev.slice(0, 4)]);
+
+    // Save to database if user is authenticated
+    if (isAuthenticated) {
+      try {
+        await apiService.saveScan({
+          type: scanResult.type,
+          content: inputValue,
+          classification: scanResult.classification,
+          confidence: scanResult.confidence,
+          explanation: scanResult.explanation || '',
+          highlighted_text: scanResult.highlighted_text || inputValue
+        });
+        toast.success('Scan saved to history');
+      } catch (error) {
+        console.error('Failed to save scan to database:', error);
+        // Don't show error toast to avoid interrupting user experience
+      }
+    }
   };
 
   const handleGenerateReport = () => {
@@ -256,8 +284,8 @@ function Scanner() {
                       
                       {activeTab === 'explainability' && (
                         <AdvancedExplainabilityDashboard
-                          emailContent={inputValue}
-                          phishingScore={result.confidence * 100}
+                          result={result}
+                          inputText={inputValue}
                         />
                       )}
                       

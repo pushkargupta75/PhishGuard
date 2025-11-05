@@ -1,16 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../utils/api';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const [recentScans, setRecentScans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for charts
-  const scanData = [
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [statsResponse, historyResponse] = await Promise.all([
+        apiService.getHistoryStats(),
+        apiService.getHistory()
+      ]);
+
+      if (statsResponse.data.success) {
+        setStats(statsResponse.data);
+      }
+
+      if (historyResponse.data.success) {
+        // Get recent 5 scans
+        const recent = historyResponse.data.scans.slice(0, 5).map(scan => ({
+          id: scan.id,
+          type: scan.scan_type,
+          content: scan.content.substring(0, 50) + (scan.content.length > 50 ? '...' : ''),
+          result: scan.classification,
+          confidence: scan.confidence,
+          time: new Date(scan.scan_date).toLocaleString()
+        }));
+        setRecentScans(recent);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      // If 401, the user will be redirected by ProtectedRoute
+      // Just log and use default/empty data
+      if (error.response?.status === 401) {
+        console.warn('Dashboard: Token invalid, user will be redirected');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data for charts (will be replaced with real data if available)
+  const scanData = stats?.daily_scans || [
     { date: 'Mon', scans: 12, malicious: 3, safe: 9 },
     { date: 'Tue', scans: 19, malicious: 5, safe: 14 },
     { date: 'Wed', scans: 15, malicious: 2, safe: 13 },
@@ -27,40 +70,18 @@ const Dashboard = () => {
     { name: 'Other', value: 10, color: '#00ff88' },
   ];
 
-  const recentScans = [
-    {
-      id: 1,
-      type: 'email',
-      content: 'Your account requires immediate verification...',
-      result: 'malicious',
-      confidence: 0.94,
-      time: '2 hours ago',
-    },
-    {
-      id: 2,
-      type: 'url',
-      content: 'https://secure-bank-login.com',
-      result: 'safe',
-      confidence: 0.89,
-      time: '5 hours ago',
-    },
-    {
-      id: 3,
-      type: 'email',
-      content: 'Meeting reminder for tomorrow at 3 PM',
-      result: 'safe',
-      confidence: 0.97,
-      time: '1 day ago',
-    },
-    {
-      id: 4,
-      type: 'url',
-      content: 'https://amaz0n-verify.tk/login',
-      result: 'malicious',
-      confidence: 0.98,
-      time: '2 days ago',
-    },
-  ];
+  const handleDeleteScan = async (scanId) => {
+    try {
+      const response = await apiService.deleteScan(scanId);
+      if (response.data.success) {
+        toast.success('Scan deleted');
+        setRecentScans(prev => prev.filter(scan => scan.id !== scanId));
+      }
+    } catch (error) {
+      toast.error('Failed to delete scan');
+      console.error(error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -239,37 +260,61 @@ const Dashboard = () => {
                   <th className="text-left text-gray-400 font-semibold pb-3">Result</th>
                   <th className="text-left text-gray-400 font-semibold pb-3">Confidence</th>
                   <th className="text-left text-gray-400 font-semibold pb-3">Time</th>
+                  <th className="text-left text-gray-400 font-semibold pb-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {recentScans.map((scan, index) => (
-                  <motion.tr
-                    key={scan.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border-b border-cyber-blue/10 hover:bg-cyber-darker transition-colors"
-                  >
-                    <td className="py-4">
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${
-                        scan.type === 'email' ? 'bg-cyber-blue/20 text-cyber-blue' : 'bg-cyber-purple/20 text-cyber-purple'
-                      }`}>
-                        {scan.type.toUpperCase()}
-                      </span>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-8 text-gray-400">
+                      Loading scans...
                     </td>
-                    <td className="py-4 text-gray-300 max-w-xs truncate">{scan.content}</td>
-                    <td className="py-4">
-                      <span className={`flex items-center ${
-                        scan.result === 'safe' ? 'text-cyber-green' : 'text-cyber-red'
-                      }`}>
-                        {scan.result === 'safe' ? '✅' : '⚠️'}
-                        <span className="ml-2 capitalize">{scan.result}</span>
-                      </span>
+                  </tr>
+                ) : recentScans.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-8 text-gray-400">
+                      No scans yet. Start scanning to see your history here!
                     </td>
-                    <td className="py-4 text-gray-300">{(scan.confidence * 100).toFixed(0)}%</td>
-                    <td className="py-4 text-gray-400 text-sm">{scan.time}</td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                ) : (
+                  recentScans.map((scan, index) => (
+                    <motion.tr
+                      key={scan.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border-b border-cyber-blue/10 hover:bg-cyber-darker transition-colors"
+                    >
+                      <td className="py-4">
+                        <span className={`text-xs font-bold px-2 py-1 rounded ${
+                          scan.type === 'email' ? 'bg-cyber-blue/20 text-cyber-blue' : 'bg-cyber-purple/20 text-cyber-purple'
+                        }`}>
+                          {scan.type.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-4 text-gray-300 max-w-xs truncate">{scan.content}</td>
+                      <td className="py-4">
+                        <span className={`flex items-center ${
+                          scan.result === 'safe' ? 'text-cyber-green' : 'text-cyber-red'
+                        }`}>
+                          {scan.result === 'safe' ? '✅' : '⚠️'}
+                          <span className="ml-2 capitalize">{scan.result}</span>
+                        </span>
+                      </td>
+                      <td className="py-4 text-gray-300">{(scan.confidence * 100).toFixed(0)}%</td>
+                      <td className="py-4 text-gray-400 text-sm">{scan.time}</td>
+                      <td className="py-4">
+                        <button
+                          onClick={() => handleDeleteScan(scan.id)}
+                          className="text-cyber-red hover:text-red-400 transition-colors"
+                          title="Delete scan"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

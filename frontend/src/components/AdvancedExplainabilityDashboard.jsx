@@ -8,6 +8,9 @@ const AdvancedExplainabilityDashboard = ({ result, inputText }) => {
 
   if (!result) return null;
 
+  // Get confidence as a number between 0 and 1
+  const confidence = typeof result.confidence === 'number' ? result.confidence : 0.85;
+
   // Generate mock SHAP-like data for risky keywords
   const riskyKeywords = [
     { word: 'urgent', score: 0.92, color: '#ff0055' },
@@ -103,25 +106,25 @@ const AdvancedExplainabilityDashboard = ({ result, inputText }) => {
               nrOfLevels={3}
               colors={['#00ff88', '#ffaa00', '#ff0055']}
               arcWidth={0.3}
-              percent={result.confidence}
+              percent={confidence}
               textColor="#ffffff"
               needleColor="#00d9ff"
               needleBaseColor="#00d9ff"
-              formatTextValue={(value) => `${value}%`}
+              formatTextValue={(value) => `${Math.round(value)}%`}
             />
           </div>
           <div className="mt-4 text-center">
             <p className={`text-2xl font-bold ${
-              result.confidence > 0.7 ? 'text-cyber-red' : 
-              result.confidence > 0.4 ? 'text-yellow-400' : 
+              confidence > 0.7 ? 'text-cyber-red' : 
+              confidence > 0.4 ? 'text-yellow-400' : 
               'text-cyber-green'
             }`}>
-              {result.confidence > 0.7 ? 'High Risk' : 
-               result.confidence > 0.4 ? 'Medium Risk' : 
+              {confidence > 0.7 ? 'High Risk' : 
+               confidence > 0.4 ? 'Medium Risk' : 
                'Low Risk'}
             </p>
             <p className="text-gray-400 text-sm mt-1">
-              Based on {result.type === 'email' ? 'email' : 'URL'} analysis
+              Based on {result.type || 'content'} analysis
             </p>
           </div>
         </div>

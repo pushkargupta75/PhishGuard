@@ -1,13 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const EmailToneAnalyzer = ({ emailText }) => {
-  if (!emailText) return null;
+const EmailToneAnalyzer = ({ emailContent }) => {
+  if (!emailContent) return null;
 
   // Analyze text for manipulative tones
   const analyzeTones = () => {
     const tones = [];
-    const text = emailText.toLowerCase();
+    const text = emailContent.toLowerCase();
 
     // Urgency detection
     const urgencyWords = ['urgent', 'immediately', 'now', 'asap', 'hurry', 'quick', 'limited time', 'expires'];

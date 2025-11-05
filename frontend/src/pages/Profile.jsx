@@ -13,10 +13,14 @@ const Profile = () => {
     email: user?.email || '',
   });
 
-  const handleSave = () => {
-    updateProfile(formData);
-    setIsEditing(false);
-    toast.success('Profile updated successfully!');
+  const handleSave = async () => {
+    const result = await updateProfile(formData);
+    if (result.success) {
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } else {
+      toast.error(result.error || 'Failed to update profile');
+    }
   };
 
   const handleLogout = () => {
