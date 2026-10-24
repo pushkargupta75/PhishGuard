@@ -47,7 +47,7 @@ export const apiService = {
 
   // Scanning
   analyzeURL: (url) => api.post('/api/analyze/url', { url }),
-  analyzeEmail: (emailContent) => api.post('/api/analyze/email', { email_content: emailContent }),
+ analyzeEmail: (emailContent) => api.post('/api/analyze/email', { emailText: emailContent }),
 
   // History
   getHistory: () => api.get('/api/history'),

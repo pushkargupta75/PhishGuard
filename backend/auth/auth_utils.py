@@ -1,7 +1,9 @@
 """
 JWT Authentication Utilities
 Handle token generation and validation
+
 """
+import os
 
 from datetime import datetime, timedelta
 from typing import Optional
@@ -14,7 +16,7 @@ from sqlalchemy.orm import Session
 from database import get_db, User
 
 # Security configuration
-SECRET_KEY = "phishguard-secret-key-change-in-production-2025"  # CHANGE THIS IN PRODUCTION!
+SECRET_KEY = os.getenv("SECRET_KEY")  # CHANGE THIS IN PRODUCTION!
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

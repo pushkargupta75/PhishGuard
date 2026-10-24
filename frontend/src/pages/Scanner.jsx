@@ -56,18 +56,13 @@ function Scanner() {
       console.error('Error analyzing content:', error);
       
       // Mock response for demo
-      const mockResult = {
-        type: inputType,
-        classification: Math.random() > 0.5 ? 'safe' : 'malicious',
-        confidence: 0.85 + Math.random() * 0.15,
-        highlighted_text: inputValue,
-        explanation: inputType === 'email' 
-          ? 'Detected manipulative urgency and suspicious domain link' 
-          : 'URL contains unusual subdomain patterns and obfuscation techniques'
-      };
       
-      setResult(mockResult);
-      addToHistory(mockResult);
+  const message =
+    error.response?.data?.detail ||
+    error.response?.data?.error ||
+    'Scan failed. Please check that the backend is running and try again.';
+
+  toast.error(message);
     } finally {
       setIsLoading(false);
     }
